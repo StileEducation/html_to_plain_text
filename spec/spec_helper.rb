@@ -1,1 +1,1 @@
-require File.expand_path("../../lib/html_to_plain_text.rb", __FILE__)
+require File.expand_path("../../lib/html_to_speech_markup.rb", __FILE__)

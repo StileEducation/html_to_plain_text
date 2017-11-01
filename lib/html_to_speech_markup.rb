@@ -1,7 +1,7 @@
 require 'nokogiri'
 
 # The main method on this module +plain_text+ will convert a string of HTML to a plain text approximation.
-module HtmlToPlainText
+module HtmlToSpeechMarkup
   IGNORE_TAGS = %w(script style object applet iframe).inject({}){|h, t| h[t] = true; h}.freeze
   PARAGRAPH_TAGS = %w(p h1 h2 h3 h4 h5 h6 table ol ul dl dd blockquote dialog figure aside section).inject({}){|h, t| h[t] = true; h}.freeze
   BLOCK_TAGS = %w(div address li dt center del article header header footer nav pre legend tr).inject({}){|h, t| h[t] = true; h}.freeze
@@ -31,11 +31,11 @@ module HtmlToPlainText
   EMPTY = "".freeze
   NEWLINE = "\n".freeze
   HREF = "href".freeze
-  TABLE_SEPARATOR = " | ".freeze
+  TABLE_SEPARATOR = " ".freeze
 
   # Helper instance method for converting HTML into plain text. This method simply calls HtmlToPlainText.plain_text.
   def plain_text(html)
-    HtmlToPlainText.plain_text(html)
+    HtmlToSpeechMarkup.plain_text(html)
   end
 
   class << self
@@ -61,7 +61,7 @@ module HtmlToPlainText
       end
 
       format_list_item(out, options) if parent.name == LI
-      out << "| " if parent.name == TR && data_table?(parent.parent)
+      out << " " if parent.name == TR && data_table?(parent.parent)
 
       parent.children.each do |node|
         if node.text? || node.cdata?
@@ -78,22 +78,12 @@ module HtmlToPlainText
 
           if node.name == BR
             out.sub!(TRAILING_WHITESPACE, EMPTY)
-            out << NEWLINE
+            out << NEWLINE unless out.end_with?(NEWLINE)
           elsif node.name == HR
             out.sub!(TRAILING_WHITESPACE, EMPTY)
             out << NEWLINE unless out.end_with?(NEWLINE)
-            out << "-------------------------------\n"
           elsif node.name == TD || node.name == TH
             out << (data_table?(parent.parent) ? TABLE_SEPARATOR : SPACE)
-          elsif node.name == A
-            href = node[HREF]
-            if href &&
-                href =~ ABSOLUTE_URL_PATTERN &&
-                node.text =~ NOT_WHITESPACE_PATTERN &&
-                node.text != href &&
-                node.text != href[NON_PROTOCOL_PATTERN, 1] # use only text for <a href="mailto:a@b.com">a@b.com</a>
-              out << " (#{href}) "
-            end
           elsif PARAGRAPH_TAGS.include?(node.name)
             append_paragraph_breaks(out)
           elsif BLOCK_TAGS.include?(node.name)
@@ -121,15 +111,10 @@ module HtmlToPlainText
       end
     end
 
-    # Add double line breaks between paragraph elements. If line breaks already exist,
-    # new ones will only be added to get to two.
+    # Add line breaks between paragraph elements.
     def append_paragraph_breaks(out)
       out.sub!(TRAILING_WHITESPACE, EMPTY)
-      if out.end_with?(NEWLINE)
-        out << NEWLINE unless out.end_with?("\n\n")
-      else
-        out << "\n\n"
-      end
+      out << NEWLINE unless out.end_with?(NEWLINE)
     end
 
     # Add a single line break between block elements. If a line break already exists,
@@ -142,7 +127,7 @@ module HtmlToPlainText
     # Add an appropriate bullet or number to a list element.
     def format_list_item(out, options)
       if options[:list] == :ul
-        out << "#{'*' * (options[:ul] + 1)} "
+        out << "#{'-' * (options[:ul] + 1)} "
       elsif options[:list] == :ol
         number = options[:number]
         options[:number] = number.next

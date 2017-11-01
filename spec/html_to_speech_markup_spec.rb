@@ -1,14 +1,14 @@
 # encoding: UTF-8
 require 'spec_helper'
 
-RSpec.describe HtmlToPlainText do
+RSpec.describe HtmlToSpeechMarkup do
   def text(html)
-    HtmlToPlainText.plain_text(html)
+    HtmlToSpeechMarkup.plain_text(html)
   end
 
   it "formats paragraph tags" do
     html = "<h1>Test</h1><h2>More Test</h2>\t \t<p>\n\tThis is a test\n</p>"
-    expect(text(html)).to eq "Test\n\nMore Test\n\nThis is a test"
+    expect(text(html)).to eq "Test\nMore Test\nThis is a test"
   end
 
   it "formats block tags" do
@@ -18,12 +18,12 @@ RSpec.describe HtmlToPlainText do
 
   it "formats <br> tags" do
     html = "<div>Test</div><br><div>More Test \t <br />This is a test"
-    expect(text(html)).to eq "Test\n\nMore Test\nThis is a test"
+    expect(text(html)).to eq "Test\nMore Test\nThis is a test"
   end
 
   it "formats <hr> tags" do
     html = "<div>Test</div><hr><div>More Test \t <hr />This is a test"
-    expect(text(html)).to eq "Test\n-------------------------------\nMore Test\n-------------------------------\nThis is a test"
+    expect(text(html)).to eq "Test\nMore Test\nThis is a test"
   end
 
   it "keeps text formatting in <pre> tag blocks" do
@@ -48,28 +48,28 @@ RSpec.describe HtmlToPlainText do
 
   it "does not add extraneous spaces or line breaks" do
     html = "this<p><p>  is   \n    \n pretty bad lo<em>oking htm</em>l!"
-    expect(text(html)).to eq "this\n\nis pretty bad looking html!"
+    expect(text(html)).to eq "this\nis pretty bad looking html!"
   end
 
   it "formats bullet lists" do
     html = "List<ul><li>one</li><li>two<ul><li>a</li><li>b</li></ul></li><li>three</li></ul>"
-    expect(text(html)).to eq "List\n\n* one\n* two\n\n** a\n** b\n\n* three"
+    expect(text(html)).to eq "List\n- one\n- two\n-- a\n-- b\n- three"
   end
 
   it "formats numbered lists" do
     html = "List<ol><li>one</li><li>two<ol><li>a</li><li>b</li></ol></li><li>three</li></ol>"
-    expect(text(html)).to eq "List\n\n1. one\n2. two\n\na. a\nb. b\n\n3. three"
+    expect(text(html)).to eq "List\n1. one\n2. two\na. a\nb. b\n3. three"
   end
 
   describe "tables" do
     it "formats a simgple table" do
       html = "Table<table border='1'><tr><th>Col 1</th><th>Col 2</th></tr><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>"
-      expect(text(html)).to eq "Table\n\n| Col 1 | Col 2 |\n| 1 | 2 |\n| 3 | 4 |"
+      expect(text(html)).to eq "Table\n Col 1 Col 2\n 1 2\n 3 4"
     end
 
     it "does not add bars to a layout table" do
       html = "Table<table border='0'><tr><th>Col 1</th><th>Col 2</th></tr><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></table>"
-      expect(text(html)).to eq "Table\n\nCol 1 Col 2\n1 2\n3 4"
+      expect(text(html)).to eq "Table\nCol 1 Col 2\n1 2\n3 4"
     end
   end
 
@@ -100,11 +100,6 @@ RSpec.describe HtmlToPlainText do
 
     it "discards paths" do
       expect(text("<a href='/test'>Links</a>")).to eq "Links"
-    end
-
-    it "includes absolute link URLs" do
-      html = "<a href='http://example.com/test'>full</a>"
-      expect(text(html)).to eq "full (http://example.com/test)"
     end
 
     it "only uses the name for exact duplicates" do

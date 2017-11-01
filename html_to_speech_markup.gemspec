@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name = 'html_to_plain_text'
+  s.name = 'html_to_speech_markup'
   s.version = File.read(File.expand_path("../VERSION", __FILE__)).strip
   s.summary = "A simple library for converting HTML into plain text."
   s.description = "A simple library for converting HTML into an approximation in plain text."
